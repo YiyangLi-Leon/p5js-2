@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Magnet Letters with Controls</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+  <style>
+    body { font-family: sans-serif; margin: 0; overflow: hidden; }
+    #controls {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(255,255,255,0.95);
+      padding: 10px;
+      border-radius: 8px;
+      z-index: 10;
+      max-width: 300px;
+      font-size: 14px;
+    }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <label>Font Size: <input type="number" id="fontSize" value="20" min="5" max="100" /></label><br>
+    <label>Line Spacing: <input type="number" id="lineSpacing" value="24" min="10" max="100" /></label><br>
+    <label>Easing: <input type="range" id="easing" value="0.1" min="0.01" max="0.5" step="0.01" /></label><br>
+    <label>Font Color: <input type="color" id="fontColor" value="#000000" /></label><br>
+    <label>Background Color: <input type="color" id="bgColor" value="#ffffff" /></label><br>
+    <label>Upload Font: <input type="file" id="fontUpload" accept=".ttf,.otf" /></label><br>
+    <label>Upload Background Image: <input type="file" id="bgUpload" accept="image/*" /></label>
+  </div>
+
+  <script>
+    let font, bgImg = null;
+    let letters = [];
+    let fontSize = 20;
+    let lineSpacing = 24;
+    let easing = 0.1;
+    let fontColor = '#000000';
+    let bgColor = '#ffffff';
+
+    const textStr = `IntheSbus,intherushhour.Achapofabout26,felt
+    hatwithacordinsteadofaribbon,necktoolong,asifsomeone’s
+    beenhavingatug-of-warwithit.Peoplegettingoff.Thechapin
+    questiongetsannoyedwithoneofthemenstandingnexttohim.
+    Heaccuseshimofjostlinghimeverytimeanyonegoespast.
+    Asnivellingtonewhichismeanttobeaggressive.Whenhesee
+    savacantseathethrows himselfontoit.Twohourslater,Im
+    eet himintheCourdeRome,infrontofthegareSaint-Lazare.
+    He’swithafriendwho’ssaying:“Yououghttogetanextrabut
+    tonputonyourovercoat.”Heshowshimwhere(atthelapels)
+    andwhy.`.replace(/\s+/g, '');
+
+    function preload() {
+      font = loadFont('https://cdnjs.cloudflare.com/ajax/libs/topcoat/0.8.0/font/SourceCodePro-Regular.otf');
+    }
+
+    function setup() {
+      createCanvas(1040, 735);
+      createLetters();
+      document.getElementById('fontSize').addEventListener('input', updateSettings);
+      document.getElementById('lineSpacing').addEventListener('input', updateSettings);
+      document.getElementById('easing').addEventListener('input', updateSettings);
+      document.getElementById('fontColor').addEventListener('input', updateSettings);
+      document.getElementById('bgColor').addEventListener('input', updateSettings);
+      document.getElementById('fontUpload').addEventListener('change', handleFontUpload);
+      document.getElementById('bgUpload').addEventListener('change', handleBgUpload);
+    }
+
+    function draw() {
+      if (bgImg) background(bgImg);
+      else background(bgColor);
+      fill(fontColor);
+      textFont(font);
+      textSize(fontSize);
+
+      for (let l of letters) {
+        let diff = l.targetX - l.x;
+        if (abs(diff) < 0.5) l.x = l.targetX;
+        else l.x += diff * easing;
+        text(l.char, l.x, l.y);
+      }
+    }
+
+    function createLetters() {
+      letters = [];
+      let x = 10;
+      let y = 10;
+      for (let c of textStr) {
+        if (x > width - 20) {
+          x = 10;
+          y += lineSpacing;
+        }
+        letters.push({ char: c, x: x, y: y, targetX: x });
+        x += textWidth(c) + 10;
+      }
+    }
+
+    function updateSettings() {
+      fontSize = parseInt(document.getElementById('fontSize').value);
+      lineSpacing = parseInt(document.getElementById('lineSpacing').value);
+      easing = parseFloat(document.getElementById('easing').value);
+      fontColor = document.getElementById('fontColor').value;
+      bgColor = document.getElementById('bgColor').value;
+      createLetters();
+    }
+
+    function handleFontUpload(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(f) {
+          font = loadFont(f.target.result, () => {
+            createLetters();
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function handleBgUpload(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(f) {
+          loadImage(f.target.result, img => {
+            bgImg = img;
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  </script>
+</body>
+</html>
